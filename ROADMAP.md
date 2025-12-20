@@ -1,30 +1,35 @@
 # Roadmap
 
-*Last updated: 2025-12-19*
+*Last updated: 2025-12-20*
 
 What's next, in order. When done, move to `COMPLETED.md`.
 
 ---
 
-## 1. SOP Backfill (IN PROGRESS)
+## 1. SOP Backfill (MATCHING COMPLETE)
 
-**Current status (Dec 19, 2025):**
-- **135 episodes** scraped
-- **1,208 songs** extracted
+**Current status (Dec 20, 2025):**
+- **462 episodes** scraped
+- **4,544 songs** extracted and matched
 - Neon Project: `summer-grass-52363332`
 - Playlist: [Every Song on Switched On Pop](https://open.spotify.com/playlist/0cEVeX4pdHf5RJOiTRzgxX)
 
-**Key discovery:** SOP's numbered episode format (`/episodes/XX-title`) ends at episode 73 (Björk, Dec 2017). Episodes 74+ use unnumbered URLs (`/episodes/title-only`).
+**Match results:**
+| Confidence | Count | % |
+|------------|-------|---|
+| HIGH | 3,251 | 71.5% |
+| MEDIUM | 566 | 12.5% |
+| LOW | 200 | 4.4% |
+| NOT_FOUND | 527 | 11.6% |
 
-**Phase 1: Scrape all episodes (IN PROGRESS)**
-- [x] Episodes 1-73 (numbered format) scraped
-- [x] 62 additional episodes scraped via firecrawl map
-- [ ] ~265 episodes remaining (see database-driven approach below)
+**Phase 1: Scrape all episodes** ✅ COMPLETE
 
-**Phase 2: Match songs to Spotify (PENDING)**
-- [ ] Batch match songs using Spotify MCP (150 songs/batch)
-- [ ] Add HIGH confidence matches to playlist
-- [ ] Store `spotify_track_id` in songs table
+**Phase 2: Match songs to Spotify** ✅ COMPLETE (scripted)
+- [x] Built Python script `scripts/spotify_match.py`
+- [x] Matched all 4,544 songs
+- [ ] Review LOW matches (200 songs)
+- [ ] Review NOT_FOUND (527 songs)
+- [ ] Sync HIGH+MEDIUM to Spotify playlist
 
 ### Database-Driven Scraping Approach
 
@@ -49,10 +54,11 @@ UPDATE episodes SET
 WHERE id = X
 ```
 
-### Batch Prompts (post-compact)
+### Prompts & Scripts
 
-**Scraping (25 eps/batch):** See `claude-plans/prompts/scrape-episodes.md`
-**Spotify matching (150 songs/batch):** See `claude-plans/prompts/match-songs.md`
+**Scraping (25 eps/batch):** See `claude-plans/prompts/sop/scrape-episodes.md`
+**Spotify matching:** Scripted - run `python scripts/spotify_match.py --show-id 1`
+**Review LOW/NOT_FOUND:** See `claude-plans/prompts/_spotify-review.md`
 
 ---
 
@@ -99,13 +105,18 @@ Once backfill is done, automate ongoing updates.
 
 ---
 
-## 5. Expand: This American Life (TAL)
+## 5. Expand: This American Life (TAL) (IN PROGRESS)
 
 Similar approach to SOP - website has song credits.
 
+**Current status (Dec 20, 2025):**
+- Show ID: 2
+- Playlist: [TAL Songs](https://open.spotify.com/playlist/3d7fjfrTTKvrl7VHv5JzIz)
+
 **What:**
+- [x] Set up TAL show and playlist in database
 - [ ] Scrape TAL website for song credits
-- [ ] Same pipeline: parse → match → Neon → Notion → Spotify
+- [ ] Run matching script: `python scripts/spotify_match.py --show-id 2`
 
 ---
 
@@ -149,7 +160,9 @@ Cross-device watchlist sync for movie/TV recommendations.
 
 Not committed - capture for later consideration.
 
+- **Public database export** - Export to SQLite or build read-only API for public access. Neon is for dev/internal use, not public sharing.
 - **Human review UI** - For low-confidence matches, quick approve/reject
+- **Spotify metadata enrichment** - Backfill release year (from album API) and genre (from artist API). Not included in batch search response - requires additional API calls per track. Lower priority but nice for filtering/analytics.
 - **Book audiobook availability** - No good API found, manual for now
 - **One-click-play for TV** - Reelgood integration? (Likewise was buggy)
 - **Public dashboard** - Stats on playlist, most-discussed songs

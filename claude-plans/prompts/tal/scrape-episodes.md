@@ -1,4 +1,4 @@
-# Batch: Scrape TAL Episodes (30/batch)
+# Batch: Scrape TAL Episodes (60/batch)
 
 *Use after URL discovery is complete*
 *Created 2025-12-19, Updated 2025-12-20*
@@ -7,16 +7,18 @@
 - Neon Project: `summer-grass-52363332`
 - Show ID: 2 (TAL)
 - Episodes table has URLs with `scraped_at = NULL` for unscraped
-- **Current progress:** 100 scraped, 782 remaining, 128 songs (as of 2025-12-20)
+- **Current progress:** 209 scraped, 673 remaining, 266 songs (as of 2025-12-20)
 
 ## Task
 
-### 1. Query 30 unscraped episodes
+### 1. Query next 10 unscraped episodes (NO OFFSET!)
 ```sql
-SELECT id, url FROM episodes WHERE show_id = 2 AND scraped_at IS NULL ORDER BY id LIMIT 30
+SELECT id, url FROM episodes WHERE show_id = 2 AND scraped_at IS NULL ORDER BY id LIMIT 10
 ```
 
-### 2. Scrape in sub-batches of 5 (parallel)
+**CRITICAL:** Always use `LIMIT 10` with **NO OFFSET**. The pool of unscraped episodes shrinks after each sub-batch, so using OFFSET will skip episodes!
+
+### 2. Scrape 10 episodes in parallel
 ```
 mcp__firecrawl__firecrawl_scrape
 url: "https://www.thisamericanlife.org/XXX/slug"
