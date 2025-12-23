@@ -1,0 +1,7 @@
+# Album Cover Mosaic Generator dependencies
+spotipy>=2.23.0
+python-dotenv>=1.0.0
+Pillow>=10.0.0
+numpy>=1.24.0
+tqdm>=4.65.0
+psycopg2-binary>=2.9.9  # Optional: only needed for --from-db mode
