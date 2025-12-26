@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-Photo Mosaic Generator - No Cheating Edition
+Photo Mosaic Generator
 
-Creates a photo mosaic from tile images WITHOUT:
-- Semi-transparent overlays
-- Color tinting
-- Blending/fading
+Creates a photo mosaic from tile images.
 
+Optional cheating mode blends original image for better recognition.
 Uses true tile matching based on color similarity.
 
 Based on the approach from github.com/dvdtho/python-photo-mosaic
@@ -99,17 +97,20 @@ class TilePool:
         tile_size: int,
         allow_reuse: bool = True,
         min_reuse_distance: int = 5,
+        max_reuse: int = 0,  # 0 = unlimited
     ):
         self.tile_size = tile_size
         self.allow_reuse = allow_reuse
         self.min_reuse_distance = min_reuse_distance
+        self.max_reuse = max_reuse
 
         self.tiles: List[np.ndarray] = []
         self.colors: List[Tuple[int, int, int]] = []
         self.names: List[str] = []
 
-        # Track recent usage positions for reuse control
+        # Track usage positions and counts for reuse control
         self.recent_usage: Dict[int, List[Tuple[int, int]]] = defaultdict(list)
+        self.usage_count: Dict[int, int] = defaultdict(int)
 
         self._load_tiles(tiles_dir)
 
@@ -147,12 +148,14 @@ class TilePool:
         self,
         target_color: Tuple[int, int, int],
         position: Tuple[int, int],
-        top_n: int = 5,
+        top_n: int = 10,
+        randomize: bool = True,
     ) -> np.ndarray:
         """
         Find the best matching tile for a target color.
 
         If allow_reuse is False, excludes recently used tiles in nearby positions.
+        If randomize is True, picks randomly from top N valid candidates to avoid patterns.
         """
         # Calculate distances to all tiles
         distances = [
@@ -164,24 +167,49 @@ class TilePool:
         distances.sort(key=lambda x: x[1])
 
         # Find valid tile (respecting reuse rules)
-        for tile_idx, dist in distances[:max(top_n * 3, 50)]:
-            if self.allow_reuse:
-                # With reuse, just pick the best match
-                self._record_usage(tile_idx, position)
-                return self.tiles[tile_idx]
+        # Validate if: no-reuse mode, OR max_reuse limit set, OR min_distance set
+        need_validation = (not self.allow_reuse) or (self.max_reuse > 0) or (self.min_reuse_distance > 0)
 
-            # Without reuse, check if tile was used recently nearby
+        if not need_validation:
+            # Unlimited reuse, just pick the best match
+            tile_idx = distances[0][0]
+            self._record_usage(tile_idx, position)
+            return self.tiles[tile_idx]
+
+        # Collect valid candidates (up to top_n for randomization)
+        valid_candidates = []
+        for tile_idx, dist in distances:
             if self._is_valid_position(tile_idx, position):
-                self._record_usage(tile_idx, position)
-                return self.tiles[tile_idx]
+                valid_candidates.append((tile_idx, dist))
+                if len(valid_candidates) >= top_n:
+                    break
 
-        # Fallback: pick from top matches with some randomness
-        idx = distances[random.randint(0, min(top_n - 1, len(distances) - 1))][0]
-        self._record_usage(idx, position)
-        return self.tiles[idx]
+        if valid_candidates:
+            if randomize and len(valid_candidates) > 1:
+                # Pick randomly from valid candidates, weighted toward better matches
+                # Use exponential weights so best matches are more likely
+                weights = [1.0 / (1 + i * 0.5) for i in range(len(valid_candidates))]
+                total = sum(weights)
+                weights = [w / total for w in weights]
+                chosen_idx = random.choices(range(len(valid_candidates)), weights=weights, k=1)[0]
+                tile_idx = valid_candidates[chosen_idx][0]
+            else:
+                tile_idx = valid_candidates[0][0]
+            self._record_usage(tile_idx, position)
+            return self.tiles[tile_idx]
+
+        # Fallback: all tiles maxed out or too close - find least-used tile
+        least_used_idx = min(range(len(self.tiles)), key=lambda i: self.usage_count[i])
+        self._record_usage(least_used_idx, position)
+        return self.tiles[least_used_idx]
 
     def _is_valid_position(self, tile_idx: int, position: Tuple[int, int]) -> bool:
-        """Check if tile can be placed at position (not too close to same tile)."""
+        """Check if tile can be placed at position (respects max_reuse and min_distance)."""
+        # Check max reuse limit
+        if self.max_reuse > 0 and self.usage_count[tile_idx] >= self.max_reuse:
+            return False
+
+        # Check minimum distance from same tile
         for prev_pos in self.recent_usage[tile_idx]:
             dist = abs(position[0] - prev_pos[0]) + abs(position[1] - prev_pos[1])
             if dist < self.min_reuse_distance:
@@ -191,7 +219,8 @@ class TilePool:
     def _record_usage(self, tile_idx: int, position: Tuple[int, int]):
         """Record that a tile was used at a position."""
         self.recent_usage[tile_idx].append(position)
-        # Keep only recent history
+        self.usage_count[tile_idx] += 1
+        # Keep only recent history for distance checking
         if len(self.recent_usage[tile_idx]) > 100:
             self.recent_usage[tile_idx] = self.recent_usage[tile_idx][-50:]
 
@@ -207,6 +236,9 @@ def create_mosaic(
     output_path: str = DEFAULT_OUTPUT,
     allow_reuse: bool = True,
     enlargement: int = 1,
+    max_reuse: int = 0,
+    min_reuse_distance: int = 3,
+    cheat_alpha: float = 0.0,
 ) -> str:
     """
     Create a photo mosaic from tile images.
@@ -218,6 +250,9 @@ def create_mosaic(
         output_path: Where to save the mosaic
         allow_reuse: Whether tiles can be reused (disable for more variety)
         enlargement: Scale factor for output (1 = each tile is tile_size pixels)
+        max_reuse: Max times a single tile can be reused (0 = unlimited)
+        min_reuse_distance: Min grid distance before same tile can repeat
+        cheat_alpha: Blend original image on top (0.0-1.0, 0 = no cheat)
 
     Returns:
         Path to the created mosaic
@@ -241,12 +276,18 @@ def create_mosaic(
         tiles_dir,
         tile_size * enlargement,
         allow_reuse=allow_reuse,
+        min_reuse_distance=min_reuse_distance,
+        max_reuse=max_reuse,
     )
 
     if grid_w * grid_h > len(pool.tiles) and not allow_reuse:
-        print(f"WARNING: Need {grid_w * grid_h} tiles but only have {len(pool.tiles)}. "
-              "Enabling tile reuse.", file=sys.stderr)
+        # Calculate minimum reuse needed and set a reasonable limit
+        tiles_needed = grid_w * grid_h
+        min_reuse_per_tile = (tiles_needed // len(pool.tiles)) + 1
+        print(f"WARNING: Need {tiles_needed} tiles but only have {len(pool.tiles)}. "
+              f"Setting max_reuse to {min_reuse_per_tile}.", file=sys.stderr)
         pool.allow_reuse = True
+        pool.max_reuse = min_reuse_per_tile
 
     # Create output image
     output_w = grid_w * tile_size * enlargement
@@ -278,9 +319,19 @@ def create_mosaic(
 
                 pbar.update(1)
 
+    # Convert to PIL Image
+    output_img = Image.fromarray(output)
+
+    # Apply cheat blend if requested
+    if cheat_alpha > 0:
+        print(f"\nApplying cheat blend (alpha={cheat_alpha})...")
+        # Resize target to match output
+        target_resized = target.resize((output_w, output_h), Image.Resampling.LANCZOS)
+        # Blend: (1-alpha)*mosaic + alpha*target
+        output_img = Image.blend(output_img, target_resized, cheat_alpha)
+
     # Save output
     print(f"\nSaving mosaic to: {output_path}")
-    output_img = Image.fromarray(output)
 
     # Use high quality for JPEG
     if output_path.lower().endswith(('.jpg', '.jpeg')):
@@ -327,6 +378,24 @@ def parse_args() -> argparse.Namespace:
         help="Don't allow tile reuse (requires many unique tiles)"
     )
     parser.add_argument(
+        "--max-reuse",
+        type=int,
+        default=0,
+        help="Max times a single tile can be used (0 = unlimited). Default: 0"
+    )
+    parser.add_argument(
+        "--min-distance",
+        type=int,
+        default=3,
+        help="Min grid distance before same tile can repeat. Default: 3"
+    )
+    parser.add_argument(
+        "--cheat",
+        type=float,
+        default=0.0,
+        help="Blend original image (0.0-1.0). 0.2 = subtle, 0.4 = obvious. Default: 0"
+    )
+    parser.add_argument(
         "--enlarge", "-e",
         type=int,
         default=1,
@@ -340,7 +409,7 @@ def main():
     args = parse_args()
 
     print("=" * 60)
-    print("Photo Mosaic Generator - No Cheating Edition")
+    print("Photo Mosaic Generator")
     print("=" * 60)
 
     if not os.path.exists(args.target):
@@ -358,6 +427,9 @@ def main():
         output_path=args.output,
         allow_reuse=not args.no_reuse,
         enlargement=args.enlarge,
+        max_reuse=args.max_reuse,
+        min_reuse_distance=args.min_distance,
+        cheat_alpha=args.cheat,
     )
 
     print("\n" + "=" * 60)

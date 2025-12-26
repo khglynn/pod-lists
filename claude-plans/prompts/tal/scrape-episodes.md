@@ -7,7 +7,7 @@
 - Neon Project: `summer-grass-52363332`
 - Show ID: 2 (TAL)
 - Episodes table has URLs with `scraped_at = NULL` for unscraped
-- **Current progress:** 209 scraped, 673 remaining, 266 songs (as of 2025-12-20)
+- **Current progress:** 444 scraped, 438 remaining, 529 songs (as of 2025-12-20)
 
 ## Task
 

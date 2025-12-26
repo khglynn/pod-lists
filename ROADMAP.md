@@ -1,35 +1,40 @@
 # Roadmap
 
-*Last updated: 2025-12-20*
+*Last updated: 2025-12-26*
 
 What's next, in order. When done, move to `COMPLETED.md`.
 
 ---
 
-## 1. SOP Backfill (MATCHING COMPLETE)
+## 1. SOP Backfill ✅ COMPLETE
 
-**Current status (Dec 20, 2025):**
+**Final status (Dec 21, 2025):**
 - **462 episodes** scraped
-- **4,544 songs** extracted and matched
+- **4,544 songs** extracted
+- **3,501 tracks** in playlist
 - Neon Project: `summer-grass-52363332`
 - Playlist: [Every Song on Switched On Pop](https://open.spotify.com/playlist/0cEVeX4pdHf5RJOiTRzgxX)
 
-**Match results:**
+**Final match results:**
 | Confidence | Count | % |
 |------------|-------|---|
 | HIGH | 3,251 | 71.5% |
 | MEDIUM | 566 | 12.5% |
-| LOW | 200 | 4.4% |
-| NOT_FOUND | 527 | 11.6% |
+| MANUAL | 333 | 7.3% |
+| NOT_FOUND | 376 | 8.3% |
+| UNAVAILABLE | 18 | 0.4% |
+
+**Match rate: 91.3%** (4,150 of 4,544)
 
 **Phase 1: Scrape all episodes** ✅ COMPLETE
 
-**Phase 2: Match songs to Spotify** ✅ COMPLETE (scripted)
+**Phase 2: Match songs to Spotify** ✅ COMPLETE
 - [x] Built Python script `scripts/spotify_match.py`
 - [x] Matched all 4,544 songs
-- [ ] Review LOW matches (200 songs)
-- [ ] Review NOT_FOUND (527 songs)
-- [ ] Sync HIGH+MEDIUM to Spotify playlist
+- [x] Reviewed LOW matches (200 → 181 approved, 19 fixed/rejected)
+- [x] Reviewed NOT_FOUND (534 → fixed 158, marked 18 unavailable)
+- [x] Synced to Spotify playlist (3,501 tracks)
+- [x] Built `scripts/sync_playlist.py` for ongoing updates
 
 ### Database-Driven Scraping Approach
 
@@ -94,13 +99,20 @@ For podcasts without song lists on their websites (PCHH, AI Daily).
 
 ---
 
-## 4. Weekly Automation
+## 4. Weekly Updates (Manual for Now)
 
-Once backfill is done, automate ongoing updates.
+Scripts exist for ongoing updates. Full automation (cron) is future work.
 
-**What:**
-- [ ] Vercel Cron job to check for new SOP episodes
-- [ ] Incremental processing (only new episodes)
+**Current process (see `scripts/README.md`):**
+1. Scrape new episodes (Claude + Firecrawl)
+2. Match songs: `python spotify_match.py --show-id 1`
+3. Review LOW/NOT_FOUND if any
+4. Sync to playlist: `python sync_playlist.py --show-id 1`
+   - Auto-updates description with latest episode
+
+**Future automation:**
+- [ ] Vercel Cron job to check for new episodes
+- [ ] Automatic scraping without Claude
 - [ ] Notification when new songs added
 
 ---
@@ -153,6 +165,21 @@ Cross-device watchlist sync for movie/TV recommendations.
 - [ ] Set up Trakt API integration
 - [ ] Sync movie/TV items from Notion → Trakt
 - [ ] Or direct pipeline: extract → Trakt (bypass Notion?)
+
+---
+
+## 9. Episode Artwork Scraping
+
+Scrape episode cover images for SOP and TAL to use in mosaic artwork and other visuals.
+
+**What:**
+- [ ] Scrape episode artwork URLs from SOP website
+- [ ] Scrape episode artwork URLs from TAL website
+- [ ] Add `artwork_url` column to episodes table
+- [ ] Download and store images (or just URLs?)
+- [ ] Use for playlist cover mosaics, visualizations
+
+**Context:** Built album cover mosaic for SOP playlist (Dec 2025) - see `scripts/album-cover-mosaic/`. Episode artwork would add another visual dimension.
 
 ---
 
