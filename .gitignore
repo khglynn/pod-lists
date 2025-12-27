@@ -43,6 +43,7 @@ next-env.d.ts
 # claude code
 .claude/
 
-# album mosaic assets (too large for git)
+# mosaic assets (too large for git)
 scripts/album-cover-mosaic/album_covers/
 scripts/album-cover-mosaic/*.png
+scripts/episode-art/
