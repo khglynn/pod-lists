@@ -47,3 +47,6 @@ next-env.d.ts
 scripts/album-cover-mosaic/album_covers/
 scripts/album-cover-mosaic/*.png
 scripts/episode-art/
+
+# fetched episode data (JSON files from tal_fetch.py)
+scripts/fetched/
