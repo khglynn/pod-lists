@@ -1,69 +1,19 @@
 # Roadmap
 
-*Last updated: 2025-12-26*
+*Last updated: 2026-01-25*
 
 What's next, in order. When done, move to `COMPLETED.md`.
 
 ---
 
-## 1. SOP Backfill ✅ COMPLETE
+## 1. Review TAL NOT_FOUND Songs
 
-**Final status (Dec 21, 2025):**
-- **462 episodes** scraped
-- **4,544 songs** extracted
-- **3,501 tracks** in playlist
-- Neon Project: `summer-grass-52363332`
-- Playlist: [Every Song on Switched On Pop](https://open.spotify.com/playlist/0cEVeX4pdHf5RJOiTRzgxX)
+**214 songs** couldn't be matched to Spotify. Manual review needed.
 
-**Final match results:**
-| Confidence | Count | % |
-|------------|-------|---|
-| HIGH | 3,251 | 71.5% |
-| MEDIUM | 566 | 12.5% |
-| MANUAL | 333 | 7.3% |
-| NOT_FOUND | 376 | 8.3% |
-| UNAVAILABLE | 18 | 0.4% |
-
-**Match rate: 91.3%** (4,150 of 4,544)
-
-**Phase 1: Scrape all episodes** ✅ COMPLETE
-
-**Phase 2: Match songs to Spotify** ✅ COMPLETE
-- [x] Built Python script `scripts/spotify_match.py`
-- [x] Matched all 4,544 songs
-- [x] Reviewed LOW matches (200 → 181 approved, 19 fixed/rejected)
-- [x] Reviewed NOT_FOUND (534 → fixed 158, marked 18 unavailable)
-- [x] Synced to Spotify playlist (3,501 tracks)
-- [x] Built `scripts/sync_playlist.py` for ongoing updates
-
-### Database-Driven Scraping Approach
-
-To reduce context usage and avoid repeated work, we use the database to track progress:
-
-1. **One-time setup:** Map full site, insert ALL episode URLs into `episodes` table with `scraped_at = NULL`
-2. **Each batch:** Query `WHERE scraped_at IS NULL LIMIT 25`, scrape, update with content
-3. **No more:** Re-mapping site, comparing URL lists, risk of duplicates
-
-**SQL patterns:**
-```sql
--- Find unscraped episodes
-SELECT id, url FROM episodes WHERE scraped_at IS NULL LIMIT 25
-
--- After scraping, update the episode
-UPDATE episodes SET
-  title = '...',
-  publish_date = 'YYYY-MM-DD',
-  episode_number = XXX,
-  has_songs_discussed = true/false,
-  scraped_at = NOW()
-WHERE id = X
-```
-
-### Prompts & Scripts
-
-**Scraping (25 eps/batch):** See `claude-plans/prompts/sop/scrape-episodes.md`
-**Spotify matching:** Scripted - run `python scripts/spotify_match.py --show-id 1`
-**Review LOW/NOT_FOUND:** See `claude-plans/prompts/_spotify-review.md`
+**What:**
+- [ ] Query NOT_FOUND songs: `SELECT * FROM songs WHERE spotify_match_confidence = 'NOT_FOUND' AND episode_id IN (SELECT id FROM episodes WHERE show_id = 2)`
+- [ ] Use Spotify MCP fuzzy search for each
+- [ ] Mark truly unavailable as UNAVAILABLE
 
 ---
 
@@ -99,16 +49,15 @@ For podcasts without song lists on their websites (PCHH, AI Daily).
 
 ---
 
-## 4. Weekly Updates (Manual for Now)
+## 4. Weekly Updates Automation
 
 Scripts exist for ongoing updates. Full automation (cron) is future work.
 
-**Current process (see `scripts/README.md`):**
+**Current process (see `pipeline/README.md`):**
 1. Scrape new episodes (Claude + Firecrawl)
 2. Match songs: `python spotify_match.py --show-id 1`
 3. Review LOW/NOT_FOUND if any
 4. Sync to playlist: `python sync_playlist.py --show-id 1`
-   - Auto-updates description with latest episode
 
 **Future automation:**
 - [ ] Vercel Cron job to check for new episodes
@@ -117,22 +66,7 @@ Scripts exist for ongoing updates. Full automation (cron) is future work.
 
 ---
 
-## 5. Expand: This American Life (TAL) (IN PROGRESS)
-
-Similar approach to SOP - website has song credits.
-
-**Current status (Dec 20, 2025):**
-- Show ID: 2
-- Playlist: [TAL Songs](https://open.spotify.com/playlist/3d7fjfrTTKvrl7VHv5JzIz)
-
-**What:**
-- [x] Set up TAL show and playlist in database
-- [ ] Scrape TAL website for song credits
-- [ ] Run matching script: `python scripts/spotify_match.py --show-id 2`
-
----
-
-## 6. Expand: Pop Culture Happy Hour (PCHH)
+## 5. Expand: Pop Culture Happy Hour (PCHH)
 
 More complex - needs transcripts + sentiment filtering.
 
@@ -145,7 +79,7 @@ More complex - needs transcripts + sentiment filtering.
 
 ---
 
-## 7. Expand: AI Daily
+## 6. Expand: AI Daily
 
 Apps/platforms/tools recommendations.
 
@@ -157,7 +91,7 @@ Apps/platforms/tools recommendations.
 
 ---
 
-## 8. Trakt Integration (Movies/TV)
+## 7. Trakt Integration (Movies/TV)
 
 Cross-device watchlist sync for movie/TV recommendations.
 
@@ -165,21 +99,6 @@ Cross-device watchlist sync for movie/TV recommendations.
 - [ ] Set up Trakt API integration
 - [ ] Sync movie/TV items from Notion → Trakt
 - [ ] Or direct pipeline: extract → Trakt (bypass Notion?)
-
----
-
-## 9. Episode Artwork Scraping
-
-Scrape episode cover images for SOP and TAL to use in mosaic artwork and other visuals.
-
-**What:**
-- [ ] Scrape episode artwork URLs from SOP website
-- [ ] Scrape episode artwork URLs from TAL website
-- [ ] Add `artwork_url` column to episodes table
-- [ ] Download and store images (or just URLs?)
-- [ ] Use for playlist cover mosaics, visualizations
-
-**Context:** Built album cover mosaic for SOP playlist (Dec 2025) - see `scripts/album-cover-mosaic/`. Episode artwork would add another visual dimension.
 
 ---
 

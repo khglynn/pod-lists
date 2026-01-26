@@ -4,23 +4,66 @@ Work that's done. Newest at top.
 
 ---
 
+## January 2026
+
+### Folder Reorganization
+**Completed:** Jan 25, 2026
+
+Restructured project folders for clarity:
+- `scripts/` → `pipeline/` (describes purpose)
+- `scripts/sop/`, `scripts/tal/` → `pipeline/scrapers/sop/`, `pipeline/scrapers/tal/` (grouped as scrapers)
+- `scripts/fetched/` → `pipeline/_cache/` (underscore = internal)
+- `scripts/album-cover-mosaic/` → `marketing/` (separate from pipeline)
+
+### Mosaic Artwork Complete
+**Completed:** Jan 25, 2026
+
+Created mosaic artwork for both SOP and TAL Spotify playlists:
+- **SOP:** Album art mosaic + episode art mosaic
+- **TAL:** Episode art mosaic with tinted variants
+- See `marketing/CLAUDE.md` for settings and outputs
+
+### TAL Backfill Complete
+**Completed:** Jan 2026
+
+- ✅ 882 episodes scraped from thisamericanlife.org
+- ✅ 1,094 songs extracted with episode credits
+- ✅ 880 tracks matched to Spotify (80%)
+- ✅ Synced to playlist: [TAL Songs](https://open.spotify.com/playlist/3d7fjfrTTKvrl7VHv5JzIz)
+- 214 NOT_FOUND songs remaining (need manual review)
+
+**Scripts:** `pipeline/scrapers/tal/`
+
+---
+
 ## December 2025
 
-### SOP Pipeline v1 Complete
-**Completed:** Dec 19, 2025
+### SOP Backfill Complete
+**Completed:** Dec 21, 2025
 
+- ✅ **462 episodes** scraped from switchedonpop.com
+- ✅ **4,544 songs** extracted
+- ✅ **3,501 tracks** in playlist (91.3% match rate)
 - ✅ Neon database with shows, episodes, songs tables
-- ✅ SOP scraper with "Songs Discussed" parsing
-- ✅ Parser handles multiple formats (bullets, dashes, quotes, uppercase)
-- ✅ Schema columns for `has_songs_discussed` and `description_body`
-- ✅ 4 episodes scraped, 41 songs matched
-- ✅ Spotify playlist created: [Every Song on Switched On Pop](https://open.spotify.com/playlist/0cEVeX4pdHf5RJOiTRzgxX)
-- ✅ `update_playlist` tool added to Spotify MCP
+- ✅ Built `pipeline/spotify_match.py` for matching
+- ✅ Built `pipeline/sync_playlist.py` for syncing
+- ✅ Reviewed all LOW and NOT_FOUND matches
+- ✅ Playlist: [Every Song on Switched On Pop](https://open.spotify.com/playlist/0cEVeX4pdHf5RJOiTRzgxX)
+
+**Match results:**
+| Confidence | Count | % |
+|------------|-------|---|
+| HIGH | 3,251 | 71.5% |
+| MEDIUM | 566 | 12.5% |
+| MANUAL | 333 | 7.3% |
+| NOT_FOUND | 376 | 8.3% |
+| UNAVAILABLE | 18 | 0.4% |
 
 **Files:**
 - `src/lib/db.ts` - Neon client + queries
-- `src/lib/scraper/sop.ts` - SOP website scraper
-- `src/app/api/scrape/route.ts` - API endpoint
+- `pipeline/spotify_match.py` - Match songs to Spotify
+- `pipeline/sync_playlist.py` - Sync to playlist
+- `claude-plans/prompts/sop/` - Scraping prompts
 
 ---
 

@@ -43,10 +43,23 @@ next-env.d.ts
 # claude code
 .claude/
 
-# mosaic assets (too large for git)
-scripts/album-cover-mosaic/album_covers/
-scripts/album-cover-mosaic/*.png
-scripts/episode-art/
+# marketing assets (too large for git)
+marketing/album_covers/
+marketing/sop/tiles/
+marketing/sop/output/
+marketing/tal/tiles/
+marketing/tal/output/
 
-# fetched episode data (JSON files from tal_fetch.py)
-scripts/fetched/
+# Python virtual environment
+pipeline/venv/
+
+# cached episode data (JSON files from scrapers)
+pipeline/_cache/
+
+# Python cache
+pipeline/__pycache__/
+__pycache__/
+*.pyc
+
+# Session logs
+pipeline/match_progress.log

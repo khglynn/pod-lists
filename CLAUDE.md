@@ -1,7 +1,7 @@
 # list-maker - Agent Instructions
 
 *Inherits from ~/DevKev/CLAUDE.md*
-*Last updated: 2025-12-12*
+*Last updated: 2026-01-25*
 
 ## About This Project
 
@@ -51,11 +51,39 @@ We have a custom Spotify MCP built for this exact use case!
 
 *(Will add paths as we build)*
 
+## Folder Structure
+
+```
+list-maker/
+├── pipeline/              # Song extraction pipeline
+│   ├── spotify_match.py   # Match songs to Spotify
+│   ├── sync_playlist.py   # Sync to playlists
+│   ├── scrapers/          # Show-specific scrapers
+│   │   ├── sop/           # Switched On Pop
+│   │   └── tal/           # This American Life
+│   └── _cache/            # Cached episode data (gitignored)
+│
+├── marketing/             # Playlist artwork (mosaic generator)
+│   ├── sop/               # SOP tiles, targets, outputs
+│   └── tal/               # TAL tiles, targets, outputs
+│
+├── src/                   # Next.js app (future automation UI)
+└── claude-plans/          # Session plans and prompts
+```
+
+## Current Status (Jan 2026)
+
+| Show | Episodes | Songs | Matched | Status |
+|------|----------|-------|---------|--------|
+| SOP | 462 | 4,544 | 3,501 (91%) | Complete |
+| TAL | 882 | 1,094 | 880 (80%) | 214 NOT_FOUND to review |
+| PCHH | - | - | - | Future |
+
 ## Project-Specific Notes
 
-- **Backfill first** - We're capturing historical data before building weekly automation
-- **SOP is the pilot** - Simple case (all songs positive), no sentiment filtering needed
+- **SOP and TAL complete** - Both shows backfilled, playlists active
 - **Scrape before transcribe** - SOP and TAL have song data on their websites
+- **Mosaic artwork done** - See `marketing/` for playlist cover generators
 
 ## Relevant Docs & Links
 

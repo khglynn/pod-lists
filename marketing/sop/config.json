@@ -1,0 +1,20 @@
+{
+  "name": "Switched On Pop",
+  "description": "SOP mosaic - uses Spotify album covers, color matching enabled",
+
+  "tiles_dir": "../album_covers",
+  "target": "./targets/sop_p_white.png",
+  "output_dir": "./output",
+
+  "tile_size": 40,
+  "enlarge": 2,
+
+  "background": "white",
+  "bg_threshold": 0.7,
+
+  "max_reuse": 3,
+  "min_distance": 6,
+  "diversity": 0.4,
+
+  "cheat": 0.0
+}

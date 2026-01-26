@@ -1,0 +1,22 @@
+{
+  "name": "This American Life",
+  "description": "TAL mosaic - mono-color logo, random selection, optional tinting",
+
+  "tiles_dir": "./tiles",
+  "target": "./targets/tal_logo.png",
+  "output_dir": "./output",
+
+  "tile_size": 20,
+  "enlarge": 2,
+
+  "background": "white",
+  "bg_threshold": 0.7,
+
+  "max_reuse": 0,
+  "min_distance": 3,
+  "diversity": 0.9,
+
+  "cheat": 0.0,
+  "tint": null,
+  "tint_alpha": 0.0
+}

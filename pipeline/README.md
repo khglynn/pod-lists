@@ -1,6 +1,35 @@
-# list-maker Scripts
+# list-maker Pipeline
 
-*Last updated: 2025-12-21*
+*Last updated: 2026-01-25*
+
+## Directory Structure
+
+```
+pipeline/
+├── spotify_match.py       # Match songs to Spotify (all shows)
+├── sync_playlist.py       # Sync matched songs to playlists
+├── requirements.txt       # Python dependencies
+├── venv/                  # Virtual environment (gitignored)
+│
+├── scrapers/              # Show-specific scraping code
+│   ├── sop/               # Switched On Pop
+│   │   └── download_episode_art.py
+│   │
+│   └── tal/               # This American Life
+│       ├── fetch.py           # Fetch episode URLs
+│       ├── parse.py           # Parse episode pages
+│       ├── fill_songs.py      # Fill in song data
+│       ├── process_batch.py   # Batch processing
+│       ├── fix_404s.py        # Fix broken URLs
+│       ├── scrape_missing.py  # Scrape missing episodes
+│       ├── scoring_match.py   # Match scoring tracks
+│       └── download_episode_art.py
+│
+└── _cache/                # Scraped episode data (gitignored)
+    └── tal/               # 885 TAL episode JSONs
+```
+
+Note: Mosaic artwork generation is in `marketing/` (separate from pipeline).
 
 ## Quick Reference
 
@@ -12,7 +41,7 @@
 ## Setup
 
 ```bash
-cd /Users/KevinHG/DevKev/personal/list-maker/scripts
+cd /Users/KevinHG/DevKev/personal/list-maker/pipeline
 source venv/bin/activate
 ```
 
@@ -91,4 +120,4 @@ Scripts load from two `.env` files:
 
 ## Logs
 
-Match progress logged to `match_progress.log`
+Match progress logged to `match_progress.log` (gitignored)
