@@ -55,7 +55,7 @@ We have a custom Spotify MCP built for this exact use case!
 
 ```
 list-maker/
-├── pipeline/              # Song extraction pipeline
+├── pipeline/              # Song extraction pipeline (Python)
 │   ├── spotify_match.py   # Match songs to Spotify
 │   ├── sync_playlist.py   # Sync to playlists
 │   ├── scrapers/          # Show-specific scrapers
@@ -67,9 +67,13 @@ list-maker/
 │   ├── sop/               # SOP tiles, targets, outputs
 │   └── tal/               # TAL tiles, targets, outputs
 │
-├── src/                   # Next.js app (future automation UI)
+├── web/                   # Next.js app (future automation UI)
+│   └── src/               # Run npm commands from inside web/
+│
 └── claude-plans/          # Session plans and prompts
 ```
+
+**Note:** All `npm` commands must be run from inside `web/` (e.g., `cd web && npm run dev`).
 
 ## Current Status (Jan 2026)
 

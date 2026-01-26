@@ -22,9 +22,9 @@ See [ROADMAP.md](ROADMAP.md) for what's next.
 ## Structure
 
 ```
-pipeline/          # Song extraction and matching
+pipeline/          # Song extraction and matching (Python)
 marketing/         # Playlist cover art (mosaic generator)
-src/               # Next.js app (future automation UI)
+web/               # Next.js app (future automation UI)
 claude-plans/      # Session plans and prompts
 ```
 
