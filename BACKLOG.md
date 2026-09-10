@@ -2,13 +2,8 @@
 
 *Created 2026-09-01, replacing ROADMAP.md (last updated 2026-05-16) and COMPLETED.md (retired; its milestones are one DEVLOG archive entry). Live state is `NOW.md`; the current plan is `claude-plans/2026-09-01-ground-it-cleanup-plan.md`. This file is the parking lot: ideas and known gaps that are real but not being worked. Add a date when you park something; delete it when it ships or is decided against.*
 
-## Decided, waiting on a build (see the plan's "Next arc")
-- **Curated intake v2** — automated blog/article intake with an inexpensive classifier deciding "worth saving?" from Kevin's own saves; no human checkbox (Kevin, 2026-09-01).
-- **Ads as data** — keep sponsor-read mentions, tag them as ads, cap their weight (≈5 mentions max), log first-seen products (Kevin, 2026-09-01).
-- **Dead-man's switch** — reuse the `fleet-watchdog` Worker pattern (personal/self-hosted-mcps/watchdog): list-maker's Worker exposes its last-fire time; the watchdog Slacks when it goes stale.
-- **Feed check by episode identity** (Taddy uuid set-difference), a run-id watchdog in the Worker, a transactional batch load, `NULL` not `0.5` for missing confidence — plan Phase 4.
-- **Tests on the Spotify write path** (`spotify_match.py`, `sync_playlist.py`) — plan Phase 5.
-- **Hash-pinned lockfile** (pip-compile) — plan Phase 2.
+## Decided and built (2026-09-02 → 09-10) — kept as a one-line record, not a queue
+Curated intake v2 and ads as data (the 09-02 arc, PR #33), the dead-man's switch and the Worker's run verification, the feed check by episode identity, the transactional batch load and NULL confidence (Phase 4, PR #45, 09-04), and the tests on the Spotify write path plus the TAL scrape fix (Phase 5, PR #55, 09-04; first real run 09-10) are all on `main` — see `DEVLOG.md` for each. Still open from that list: **a hash-pinned lockfile** (pip-compile, plan Phase 2) — small, unscheduled.
 
 ## Music quality (from ROADMAP §3, still true)
 - SOP: "feat./ft." format mismatches (~130), fuzzy search for major artists (~80), mark unavailable (~25), then re-sync. TAL: the same pass on its NOT_FOUND set.
