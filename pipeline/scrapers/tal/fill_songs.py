@@ -36,20 +36,52 @@ def get_db_connection():
     return shared_connection()
 
 
-def cleanup_existing_songs(conn) -> int:
-    """Strip leading/trailing quotes from all song titles.
+# A title that only differs from a sibling by its quotes. Stripping the quotes would make
+# the two rows identical under songs_episode_title_artist_unique (sql/008: episode_id +
+# lower(btrim(title)) + lower(btrim(artist))), and Postgres refuses the UPDATE.
+_QUOTED_TITLE = "title ~ E'^[\"\u201c\u201d]+' OR title ~ E'[\"\u201c\u201d]+$'"
+_STRIPPED_TITLE = "REGEXP_REPLACE(REGEXP_REPLACE(title, E'^[\"\u201c\u201d]+', ''), E'[\"\u201c\u201d]+$', '')"
+_COLLIDES_WITH_A_SIBLING = f"""EXISTS (
+                SELECT 1 FROM songs o
+                WHERE o.episode_id = songs.episode_id
+                  AND o.id <> songs.id
+                  AND lower(btrim(o.title)) = lower(btrim({_STRIPPED_TITLE}))
+                  AND lower(btrim(o.artist)) = lower(btrim(songs.artist))
+            )"""
 
-    Returns count of songs cleaned.
+
+def count_uncleanable_songs(conn) -> int:
+    """Quoted titles this cleanup must leave alone because a clean twin already exists.
+
+    Those rows are duplicates, not dirty titles, and the fix for a duplicate is a DELETE
+    (Kevin's paste), never a silent rename. Reported so the run says so out loud.
     """
     with conn.cursor() as cur:
-        # Use REGEXP_REPLACE to strip all quote types (straight and curly)
-        cur.execute("""
+        cur.execute(f"SELECT COUNT(*) AS n FROM songs WHERE ({_QUOTED_TITLE}) AND {_COLLIDES_WITH_A_SIBLING}")
+        row = cur.fetchone()
+        return int(row["n"] if isinstance(row, dict) else row[0])
+
+
+def cleanup_existing_songs(conn) -> int:
+    """Strip leading/trailing quotes from song titles, skipping any row it cannot clean.
+
+    Returns count of songs cleaned.
+
+    The skip is what keeps this from taking down the whole scrape. On 2026-09-07, the
+    first Monday the TAL scrape ran on real work in eight months, this UPDATE hit
+    songs_episode_title_artist_unique on ONE row — episode 728 holds "Searching for a
+    New Word" and 'Searching for a New Word"' by Con Brio, and stripping the quote made
+    them identical — the exception rolled back the whole step, and the 25 songs the run
+    had just fetched were thrown away. A row whose cleaned title already exists on the
+    same episode is a duplicate, and a duplicate is not this function's to resolve
+    (count_uncleanable_songs reports it; the DELETE is Kevin's paste).
+    """
+    with conn.cursor() as cur:
+        cur.execute(f"""
             UPDATE songs
-            SET title = REGEXP_REPLACE(
-                REGEXP_REPLACE(title, E'^["\u201c\u201d]+', ''),
-                E'["\u201c\u201d]+$', ''
-            )
-            WHERE title ~ E'^["\u201c\u201d]+' OR title ~ E'["\u201c\u201d]+$'
+            SET title = {_STRIPPED_TITLE}
+            WHERE ({_QUOTED_TITLE})
+              AND NOT {_COLLIDES_WITH_A_SIBLING}
         """)
         return cur.rowcount
 
