@@ -33,6 +33,7 @@ from fetch import (
 )
 from parse import parse_episode
 from fill_songs import (
+    count_uncleanable_songs,
     get_existing_songs,
     cleanup_existing_songs,
     fix_has_songs_flags,
@@ -189,7 +190,14 @@ def scrape_new_episodes(
         print(f"  {total_existing} songs already in DB, {len(missing_songs)} missing")
 
         if missing_songs:
-            # Clean existing titles first
+            # Clean existing titles first — but never at the cost of the run: a quoted
+            # title whose clean twin already exists is a duplicate the cleanup skips and
+            # names (see fill_songs.cleanup_existing_songs and the 2026-09-07 failure).
+            uncleanable = count_uncleanable_songs(conn)
+            if uncleanable:
+                msg = f"{uncleanable} quoted song title(s) left alone: a clean twin already exists (a duplicate to DELETE, not a title to fix)"
+                print(f"  {msg}")
+                summary["errors"].append(msg)
             cleaned = cleanup_existing_songs(conn)
             if cleaned:
                 print(f"  Cleaned {cleaned} song titles (stripped quotes)")
